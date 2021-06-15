@@ -78,3 +78,5 @@ ifeq ($(TARGET_COMPILE_WITH_MSM_KERNEL),true)
     kernel_includes += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include \
                        $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include/display
 endif
+
+kernel_header_libraries := qti_kernel_headers

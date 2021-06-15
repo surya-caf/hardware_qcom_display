@@ -5,8 +5,8 @@ include $(LOCAL_PATH)/../../../common.mk
 LOCAL_MODULE                  := libsdmcore
 LOCAL_VENDOR_MODULE           := true
 LOCAL_MODULE_TAGS             := optional
-LOCAL_C_INCLUDES              := $(common_includes) $(kernel_includes)
-LOCAL_HEADER_LIBRARIES        := display_headers
+LOCAL_C_INCLUDES              := $(common_includes)
+LOCAL_HEADER_LIBRARIES        := display_headers $(kernel_header_libraries)
 LOCAL_CFLAGS                  := -fno-operator-names -Wno-unused-parameter -DLOG_TAG=\"SDM\" \
                                  $(common_flags)
 LOCAL_HW_INTF_PATH_1          := fb
@@ -26,7 +26,6 @@ ifeq ($(ENABLE_HYP),true)
     LOCAL_CFLAGS += -DHYPERVISOR
 endif
 
-LOCAL_ADDITIONAL_DEPENDENCIES := $(common_deps)
 LOCAL_SRC_FILES               := core_interface.cpp \
                                  core_impl.cpp \
                                  display_base.cpp \
