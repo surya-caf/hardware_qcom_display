@@ -102,20 +102,6 @@ static int write_int(char const* path, int value)
     }
 }
 
-static bool file_exists(const char *file)
-{
-    int fd;
-
-    fd = open(file, O_RDWR);
-    if (fd < 0) {
-        ALOGE("failed to open %s, errno=%d\n", file, errno);
-        return false;
-    }
-
-    close(fd);
-    return true;
-}
-
 static int
 is_lit(struct light_state_t const* state)
 {
@@ -202,22 +188,11 @@ out:
     return rc;
 }
 
-static int set_rgb_led_hw_blink(enum rgb_led led, int blink)
-{
-    char file[48];
-
-    snprintf(file, sizeof(file), "/sys/class/leds/%s/breath", led_names[led]);
-    if (!file_exists(file))
-        snprintf(file, sizeof(file), "/sys/class/leds/%s/blink", led_names[led]);
-
-    return write_int(file, blink);
-}
-
 static int
 set_speaker_light_locked(struct light_device_t* dev,
         struct light_state_t const* state)
 {
-    int red, green, blue;
+    int red, green, blue, white;
     int onMS, offMS;
     unsigned int colorRGB;
     int blink = 0;
@@ -232,6 +207,8 @@ set_speaker_light_locked(struct light_device_t* dev,
     green = (colorRGB >> 8) & 0xFF;
     blue = colorRGB & 0xFF;
 
+    white = (77 * red + 150 * green + 29 * blue) >> 8;
+
     onMS = state->flashOnMS;
     offMS = state->flashOffMS;
 
@@ -240,30 +217,15 @@ set_speaker_light_locked(struct light_device_t* dev,
 
     switch (state->flashMode) {
         case LIGHT_FLASH_HARDWARE:
-            if (!!red)
-                rc = set_rgb_led_hw_blink(LED_RED, blink);
-            if (!!green)
-                rc |= set_rgb_led_hw_blink(LED_GREEN, blink);
-            if (!!blue)
-                rc |= set_rgb_led_hw_blink(LED_BLUE, blink);
-            /* fallback to timed blinking if breath is not supported */
-            if (rc == 0)
-                break;
         case LIGHT_FLASH_TIMED:
             if (!!red)
                 rc = set_rgb_led_timer_trigger(LED_RED, onMS, offMS);
-            if (!!green)
-                rc |= set_rgb_led_timer_trigger(LED_GREEN, onMS, offMS);
-            if (!!blue)
-                rc |= set_rgb_led_timer_trigger(LED_BLUE, onMS, offMS);
             /* fallback to constant on if timed blinking is not supported */
             if (rc == 0)
                 break;
         case LIGHT_FLASH_NONE:
         default:
-            rc = set_rgb_led_brightness(LED_RED, red);
-            rc |= set_rgb_led_brightness(LED_GREEN, green);
-            rc |= set_rgb_led_brightness(LED_BLUE, blue);
+            rc = set_rgb_led_brightness(LED_RED, white);
             break;
     }
 
